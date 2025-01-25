@@ -8,6 +8,7 @@ import string
 import urllib.parse
 
 import boto3
+import tempfile
 
 from botocore.client import Config
 from botocore.exceptions import ClientError
@@ -163,6 +164,12 @@ class S3Operations(object):
                 )
             except ClientError:
                 frappe.throw(frappe._("Access denied: Could not delete file"))
+
+    def download_from_s3(self, key):
+        tmp = tempfile.NamedTemporaryFile()
+        with open(tmp.name,'w') as f:
+            self.S3_CLIENT.download_fileobj(self.BUCKET, key, f)
+        return tmp.name
 
     def read_file_from_s3(self, key):
         """

@@ -31,7 +31,15 @@ class FileOverride(File):
             s3ops = S3Operations()
             parsed_url = urlparse(file_path)
             s3key = dict(parse_qsl(parsed_url.query))["key"]
-            self._content = s3ops.read_file_from_s3(s3key)
+            tmp_file_path = s3ops.download_from_s3(s3key)
+            with open(tmp_file_path, mode="rb") as f:
+                self._content = f.read()
+                try:
+                    # for plain text files
+                    self._content = self._content.decode()
+                except UnicodeDecodeError:
+                    # for .png, .jpg, etc
+                    pass
             return self._content
 
         return super().get_content(encodings)
