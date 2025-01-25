@@ -166,7 +166,7 @@ class S3Operations(object):
                 frappe.throw(frappe._("Access denied: Could not delete file"))
 
     def download_from_s3(self, key):
-        tmp = tempfile.NamedTemporaryFile()
+        tmp = tempfile.NamedTemporaryFile(delete=False)
         self.S3_CLIENT.download_file(self.BUCKET, key, tmp.name)
         # with open(tmp.name,'wb') as f:
         #     self.S3_CLIENT.download_fileobj(self.BUCKET, key, f)
