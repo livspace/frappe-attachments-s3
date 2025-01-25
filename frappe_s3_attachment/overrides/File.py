@@ -1,7 +1,7 @@
 import frappe
 from frappe.core.doctype.file.file import File
 from frappe.utils import get_url
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qsl
 
 from frappe_s3_attachment.controller import S3Operations
 
@@ -29,9 +29,8 @@ class FileOverride(File):
         file_path = self.file_url or self.file_name
         if self.is_s3file():
             s3ops = S3Operations()
-            site_url = get_url()
-            parsed_url = urlparse(site_url + file_path)
-            s3key = parse_qs(parsed_url.query).get("key")
+            parsed_url = urlparse(file_path)
+            s3key = dict(parse_qsl(parsed_url.query))["key"]
             return s3ops.read_file_from_s3(s3key)
 
         return super().get_content(encodings)
