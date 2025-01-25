@@ -24,7 +24,7 @@ class FileOverride(File):
 
         return super().get_full_path()
 
-    def get_content(self, encodings=None) -> bytes | str:
+    def get_content(self) -> bytes:
 
         file_path = self.file_url or self.file_name
         if self.is_s3file():
@@ -42,4 +42,4 @@ class FileOverride(File):
                     pass
             return self._content
 
-        return super().get_content(encodings)
+        return super().get_content()
