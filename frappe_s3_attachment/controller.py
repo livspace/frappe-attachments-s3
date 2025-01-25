@@ -113,31 +113,20 @@ class S3Operations(object):
         key = self.key_generator(file_name, parent_doctype, parent_name)
         content_type = mime_type
         try:
-            if is_private:
-                self.S3_CLIENT.upload_file(
-                    file_path, self.BUCKET, key,
-                    ExtraArgs={
+            self.S3_CLIENT.upload_file(
+                file_path, self.BUCKET, key,
+                ExtraArgs={
+                    "ContentType": content_type,
+                    "Metadata": {
                         "ContentType": content_type,
-                        "Metadata": {
-                            "ContentType": content_type,
-                            "file_name":  self.strip_special_chars(file_name)
-                        }
+                        "file_name":  self.strip_special_chars(file_name)
                     }
-                )
-            else:
-                self.S3_CLIENT.upload_file(
-                    file_path, self.BUCKET, key,
-                    ExtraArgs={
-                        "ContentType": content_type,
-                        "ACL": 'public-read',
-                        "Metadata": {
-                            "ContentType": content_type,
+                }
+            )
 
-                        }
-                    }
-                )
-
-        except boto3.exceptions.S3UploadFailedError:
+        except boto3.exceptions.S3UploadFailedError as error:
+            logger = frappe.logger(with_more_info=True)
+            logger.error(f"failed to upload file to s3: {e}")
             frappe.throw(frappe._("File Upload Failed. Please try again."))
         return key
 
@@ -228,26 +217,21 @@ def file_upload_to_s3(doc, method):
             parent_name
         )
 
+        # Update s3 path only for private files
         if doc.is_private:
             method = "frappe_s3_attachment.controller.generate_file"
             file_url = """/api/method/{0}?key={1}&file_name={2}""".format(method, key, doc.file_name)
-        else:
-            file_url = '{}/{}/{}'.format(
-                s3_upload.S3_CLIENT.meta.endpoint_url,
-                s3_upload.BUCKET,
-                key
-            )
-        os.remove(file_path)
-        frappe.db.sql("""UPDATE `tabFile` SET file_url=%s, folder=%s,
-            old_parent=%s, content_hash=%s WHERE name=%s""", (
-            file_url, 'Home/Attachments', 'Home/Attachments', key, doc.name))
+            os.remove(file_path)
+            frappe.db.sql("""UPDATE `tabFile` SET file_url=%s, folder=%s,
+                old_parent=%s, content_hash=%s WHERE name=%s""", (
+                file_url, 'Home/Attachments', 'Home/Attachments', key, doc.name))
 
-        doc.file_url = file_url
+            doc.file_url = file_url
 
-        if parent_doctype and frappe.get_meta(parent_doctype).get('image_field'):
-            frappe.db.set_value(parent_doctype, parent_name, frappe.get_meta(parent_doctype).get('image_field'), file_url)
+            if parent_doctype and frappe.get_meta(parent_doctype).get('image_field'):
+                frappe.db.set_value(parent_doctype, parent_name, frappe.get_meta(parent_doctype).get('image_field'), file_url)
 
-        frappe.db.commit()
+            frappe.db.commit()
 
 
 @frappe.whitelist()
