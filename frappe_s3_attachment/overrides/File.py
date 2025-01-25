@@ -16,14 +16,6 @@ class FileOverride(File):
             return
         super().validate_file_url()
 
-    def get_full_path(self):
-        file_path = self.file_url or self.file_name
-        if self.is_s3file:
-            site_url = get_url()
-            return site_url + file_path
-
-        return super().get_full_path()
-
     def get_content(self) -> bytes:
 
         file_path = self.file_url or self.file_name
