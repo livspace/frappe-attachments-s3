@@ -31,6 +31,7 @@ class FileOverride(File):
             s3ops = S3Operations()
             parsed_url = urlparse(file_path)
             s3key = dict(parse_qsl(parsed_url.query))["key"]
-            return s3ops.read_file_from_s3(s3key)
+            self._content = s3ops.read_file_from_s3(s3key)
+            return self._content
 
         return super().get_content(encodings)
