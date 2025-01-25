@@ -167,7 +167,7 @@ class S3Operations(object):
 
     def download_from_s3(self, key):
         tmp = tempfile.NamedTemporaryFile()
-        with open(tmp.name,'w') as f:
+        with open(tmp.name,'wb') as f:
             self.S3_CLIENT.download_fileobj(self.BUCKET, key, f)
         return tmp.name
 
