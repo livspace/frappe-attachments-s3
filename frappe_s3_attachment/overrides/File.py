@@ -17,6 +17,8 @@ class FileOverride(File):
 
         site_url = get_url()
 
+        file_path = self.file_url or self.file_name
+
         if file_path.startswith("/api/method/frappe_s3_attachment.controller.generate_file"):
             return site_url + file_path
 
