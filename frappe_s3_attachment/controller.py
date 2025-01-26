@@ -205,8 +205,9 @@ def file_upload_to_s3(doc, method):
     site_path = frappe.utils.get_site_path()
     parent_doctype = doc.attached_to_doctype or 'File'
     parent_name = doc.attached_to_name
+    disable_s3_attachment = frappe.local.conf.get('disable_s3_attachment') or False
     ignore_s3_upload_for_doctype = frappe.local.conf.get('ignore_s3_upload_for_doctype') or ['Data Import']
-    if parent_doctype not in ignore_s3_upload_for_doctype:
+    if not disable_s3_attachment and parent_doctype not in ignore_s3_upload_for_doctype:
         if not doc.is_private:
             file_path = site_path + '/public' + path
         else:
@@ -318,8 +319,10 @@ def migrate_existing_files():
 
 def delete_from_cloud(doc, method):
     """Delete file from s3"""
-    s3 = S3Operations()
-    s3.delete_from_s3(doc.content_hash)
+    disable_s3_attachment = frappe.local.conf.get('disable_s3_attachment') or False
+    if not disable_s3_attachment:
+        s3 = S3Operations()
+        s3.delete_from_s3(doc.content_hash)
 
 
 @frappe.whitelist()
